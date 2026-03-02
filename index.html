@@ -25,29 +25,29 @@
       color: #00ff99;
     }
 
-    .buttons {
+    .controls {
       display: flex;
       gap: 10px;
+      align-items: center;
+    }
+
+    select, input {
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
     }
 
     button {
-      padding: 12px 25px;
+      padding: 10px 20px;
       border: none;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       border-radius: 6px;
       font-weight: bold;
     }
 
-    .buy {
-      background: #00c853;
-      color: white;
-    }
-
-    .sell {
-      background: #d50000;
-      color: white;
-    }
+    .buy { background: #00c853; color: white; }
+    .sell { background: #d50000; color: white; }
 
     #chart {
       height: 80vh;
@@ -59,26 +59,73 @@
 
 <div class="topbar">
   <div>AI Broker Platform</div>
-  <div class="balance">Balance: $10,000</div>
-  <div class="buttons">
-    <button class="buy">BUY</button>
-    <button class="sell">SELL</button>
+
+  <div class="controls">
+    <select id="symbolSelect" onchange="changeSymbol()">
+      <option value="BINANCE:BTCUSDT">BTC/USDT</option>
+      <option value="BINANCE:ETHUSDT">ETH/USDT</option>
+      <option value="FX:EURUSD">EUR/USD</option>
+      <option value="FX:GBPUSD">GBP/USD</option>
+      <option value="OANDA:XAUUSD">Gold (XAU/USD)</option>
+      <option value="OANDA:BCOUSD">Oil (Brent)</option>
+    </select>
+
+    <input type="number" id="amount" value="100" min="1" />
+
+    <button class="buy" onclick="trade('buy')">BUY</button>
+    <button class="sell" onclick="trade('sell')">SELL</button>
   </div>
+
+  <div class="balance">Balance: $<span id="balance">10000</span></div>
 </div>
 
 <div id="chart"></div>
 
 <script>
-  new TradingView.widget({
+let balance = 10000;
+let widget;
+
+function loadChart(symbol) {
+  document.getElementById("chart").innerHTML = "";
+  widget = new TradingView.widget({
     "width": "100%",
     "height": "100%",
-    "symbol": "BINANCE:BTCUSDT",
+    "symbol": symbol,
     "interval": "15",
     "theme": "dark",
     "style": "1",
     "locale": "ru",
     "container_id": "chart"
   });
+}
+
+function changeSymbol() {
+  let symbol = document.getElementById("symbolSelect").value;
+  loadChart(symbol);
+}
+
+function trade(type) {
+  let amount = parseFloat(document.getElementById("amount").value);
+  if (amount > balance) {
+    alert("Недостаточно средств!");
+    return;
+  }
+
+  // простая симуляция 50/50
+  let win = Math.random() > 0.5;
+
+  if (win) {
+    balance += amount * 0.8;
+    alert("Сделка в плюсе 🚀");
+  } else {
+    balance -= amount;
+    alert("Сделка в минусе 📉");
+  }
+
+  document.getElementById("balance").innerText = balance.toFixed(2);
+}
+
+loadChart("BINANCE:BTCUSDT");
 </script>
 
 </body>
