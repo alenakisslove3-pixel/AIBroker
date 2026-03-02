@@ -9,7 +9,7 @@
     body {
       background:#0e111a;
       color:#e1e6f0;
-      font-family: -apple-system, BlinkMacOSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height:100vh;
       overflow:hidden;
     }
@@ -31,7 +31,7 @@
       border-radius:4px;
       margin-right:12px;
     }
-    .timeframe-btn {
+    .timeframe-btn, .tool-btn {
       background:#1f2937;
       border:1px solid #374151;
       color:#9ca3af;
@@ -40,7 +40,7 @@
       border-radius:4px;
       cursor:pointer;
     }
-    .timeframe-btn.active, .timeframe-btn:hover {
+    .timeframe-btn.active, .timeframe-btn:hover, .tool-btn:hover {
       background:#2962ff;
       color:white;
       border-color:#2962ff;
@@ -50,7 +50,7 @@
     
     .main {
       display:flex;
-      height:calc(100vh - 50px);
+      height:calc(100vh - 50px - 180px);
     }
     #chart-container {
       flex:1;
@@ -125,13 +125,15 @@
       border-bottom:2px solid #2962ff; 
       background:#1f2937;
     }
-    .history {
+    .history, .positions {
       flex:1;
       padding:12px;
       overflow-y:auto;
       font-size:13px;
+      display:none;
     }
-    .trade-item {
+    .history.active, .positions.active { display:block; }
+    .trade-item, .pos-item {
       display:flex;
       justify-content:space-between;
       padding:6px 0;
@@ -144,14 +146,14 @@
 <body>
 
 <div class="header">
-  <div class="logo">AI BROKER</div>
+  <div class="logo">AI BROKER TERMINAL</div>
   
   <select id="symbolSelect" class="symbol-select" onchange="changeSymbol()">
     <option value="BINANCE:BTCUSDT">BTC/USDT</option>
     <option value="BINANCE:ETHUSDT">ETH/USDT</option>
     <option value="FX:EURUSD">EUR/USD</option>
     <option value="FX:GBPUSD">GBP/USD</option>
-    <option value="OANDA:XAUUSD">XAU/USD</option>
+    <option value="OANDA:XAUUSD">XAU/USD Gold</option>
     <option value="OANDA:BCOUSD">Brent Oil</option>
   </select>
 
@@ -164,6 +166,8 @@
     <button class="timeframe-btn" data-interval="1D">1D</button>
   </div>
 
+  <button class="tool-btn" onclick="alert('Индикаторы: SMA, RSI, MACD, Bollinger и другие — скоро добавим!')">Индикаторы</button>
+
   <div class="spacer"></div>
 
   <div class="balance">Баланс: $<span id="balance">10000.00</span></div>
@@ -175,7 +179,7 @@
   </div>
 
   <div class="right-panel">
-    <div class="panel-header">Торговля</div>
+    <div class="panel-header">Панель ордеров</div>
     <div class="order-block">
       <input type="number" id="amount" class="amount-input" value="100" min="1" step="10" placeholder="Сумма ($)" />
       <button class="btn-trade buy" onclick="trade('buy')">BUY / LONG</button>
@@ -186,22 +190,38 @@
 
 <div class="bottom-bar">
   <div class="tabs">
-    <div class="tab active">История сделок</div>
-    <div class="tab">Открытые позиции (0)</div>
+    <div class="tab active" onclick="switchTab('history')">История сделок</div>
+    <div class="tab" onclick="switchTab('positions')">Открытые позиции (0)</div>
   </div>
-  <div class="history" id="history">
-    <!-- сюда будут добавляться сделки -->
+  <div class="history active" id="history"></div>
+  <div class="positions" id="positions">
+    <!-- Пока фейковые позиции, можно добавить логику открытия -->
+    <div class="pos-item">
+      <span>BTC/USDT LONG 0.01 @ 95000</span>
+      <span class="win">+2.4% ($240)</span>
+    </div>
+    <div class="pos-item">
+      <span>EUR/USD SHORT 1000 @ 1.0850</span>
+      <span class="loss">-0.8% (-$80)</span>
+    </div>
   </div>
 </div>
 
 <script>
-let balance = 10000;
+let balance = localStorage.getItem('aiBrokerBalance') 
+  ? parseFloat(localStorage.getItem('aiBrokerBalance')) 
+  : 10000;
+let trades = JSON.parse(localStorage.getItem('aiBrokerTrades')) || [];
 let widget;
-let trades = [];
 
 const chartContainer = document.getElementById("chart");
 const historyEl = document.getElementById("history");
 const balanceEl = document.getElementById("balance");
+
+function saveState() {
+  localStorage.setItem('aiBrokerBalance', balance);
+  localStorage.setItem('aiBrokerTrades', JSON.stringify(trades));
+}
 
 function loadChart(symbol, interval = "15") {
   chartContainer.innerHTML = "";
@@ -224,7 +244,6 @@ function changeSymbol() {
   loadChart(document.getElementById("symbolSelect").value);
 }
 
-// смена таймфрейма
 document.querySelectorAll('.timeframe-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
@@ -233,6 +252,13 @@ document.querySelectorAll('.timeframe-btn').forEach(btn => {
   });
 });
 
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.querySelectorAll('.history, .positions').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+}
+
 function trade(type) {
   let amount = parseFloat(document.getElementById("amount").value) || 100;
   if (amount > balance || amount <= 0) {
@@ -240,38 +266,43 @@ function trade(type) {
     return;
   }
 
-  // 50/50 симуляция + немного разброс
-  let change = (Math.random() > 0.5 ? 1 : -1) * amount * (0.4 + Math.random() * 1.2);
-  
+  let profitPercent = (Math.random() * 4 - 2).toFixed(2); // от -2% до +2% примерно
+  let change = amount * (profitPercent / 100);
+
   balance += change;
-  balance = Math.max(0, balance);
+  balance = Math.max(0, balance.toFixed(2));
 
   const result = change >= 0 ? 'win' : 'loss';
   const sign = change >= 0 ? '+' : '';
   
-  const time = new Date().toLocaleTimeString();
+  const time = new Date().toLocaleString('ru-RU', {hour12: false});
   const symbol = document.getElementById("symbolSelect").value.split(':').pop();
   
-  trades.unshift({
-    time, symbol, type: type.toUpperCase(), amount, change
-  });
+  trades.unshift({ time, symbol, type: type.toUpperCase(), amount, change, percent: profitPercent });
 
-  // обновляем историю (последние 12 сделок)
-  historyEl.innerHTML = trades.slice(0,12).map(t => `
+  historyEl.innerHTML = trades.slice(0, 20).map(t => `
     <div class="trade-item">
-      <span>${t.time} ${t.symbol} ${t.type}</span>
-      <span class="${t.change >= 0 ? 'win' : 'loss'}">${sign}${t.change.toFixed(2)}$</span>
+      <span>${t.time} ${t.symbol} ${t.type} $${t.amount}</span>
+      <span class="${t.change >= 0 ? 'win' : 'loss'}">${sign}${t.change.toFixed(2)}$ (${t.percent}%)</span>
     </div>
   `).join('');
 
   balanceEl.innerText = balance.toFixed(2);
+  saveState();
 
   alert(change >= 0 
-    ? `Успешная сделка! +${change.toFixed(2)}$ 🚀` 
-    : `Убыток ${change.toFixed(2)}$ 📉`);
+    ? `Успех! +${change.toFixed(2)}$ (${profitPercent}%) 🚀` 
+    : `Убыток ${change.toFixed(2)}$ (${profitPercent}%) 📉`);
 }
 
 loadChart("BINANCE:BTCUSDT", "15");
+balanceEl.innerText = balance.toFixed(2);
+historyEl.innerHTML = trades.slice(0, 20).map(t => `
+  <div class="trade-item">
+    <span>${t.time} ${t.symbol} ${t.type} $${t.amount}</span>
+    <span class="${t.change >= 0 ? 'win' : 'loss'}">${(t.change >= 0 ? '+' : '')}${t.change.toFixed(2)}$ (${t.percent}%)</span>
+  </div>
+`).join('') || '<div style="color:#9ca3af; text-align:center; padding:20px;">Сделок пока нет</div>';
 </script>
 </body>
 </html>
