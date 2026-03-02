@@ -1,132 +1,277 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <title>AI Broker</title>
+  <meta charset="UTF-8" />
+  <title>AI Broker Terminal</title>
   <script src="https://s3.tradingview.com/tv.js"></script>
   <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      margin: 0;
-      background-color: #0b0f1a;
-      font-family: Arial, sans-serif;
-      color: white;
+      background:#0e111a;
+      color:#e1e6f0;
+      font-family: -apple-system, BlinkMacOSystemFont, "Segoe UI", Roboto, sans-serif;
+      height:100vh;
+      overflow:hidden;
     }
-
-    .topbar {
-      background: #111827;
-      padding: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .header {
+      height:50px;
+      background:#161b22;
+      border-bottom:1px solid #2a2f3a;
+      display:flex;
+      align-items:center;
+      padding:0 12px;
+      font-size:14px;
     }
-
-    .balance {
-      font-size: 18px;
-      font-weight: bold;
-      color: #00ff99;
+    .logo { font-weight:bold; color:#2962ff; margin-right:20px; }
+    .symbol-select {
+      background:#1f2937;
+      border:1px solid #374151;
+      color:white;
+      padding:6px 10px;
+      border-radius:4px;
+      margin-right:12px;
     }
-
-    .controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    .timeframe-btn {
+      background:#1f2937;
+      border:1px solid #374151;
+      color:#9ca3af;
+      padding:6px 10px;
+      margin:0 2px;
+      border-radius:4px;
+      cursor:pointer;
     }
-
-    select, input {
-      padding: 8px;
-      border-radius: 5px;
-      border: none;
+    .timeframe-btn.active, .timeframe-btn:hover {
+      background:#2962ff;
+      color:white;
+      border-color:#2962ff;
     }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 6px;
-      font-weight: bold;
+    .spacer { flex:1; }
+    .balance { color:#10b981; font-weight:bold; margin-right:16px; }
+    
+    .main {
+      display:flex;
+      height:calc(100vh - 50px);
     }
-
-    .buy { background: #00c853; color: white; }
-    .sell { background: #d50000; color: white; }
-
-    #chart {
-      height: 80vh;
+    #chart-container {
+      flex:1;
+      position:relative;
     }
+    #chart { 
+      position:absolute; 
+      inset:0; 
+    }
+    
+    .right-panel {
+      width:360px;
+      background:#161b22;
+      border-left:1px solid #2a2f3a;
+      display:flex;
+      flex-direction:column;
+    }
+    .panel-header {
+      padding:12px;
+      border-bottom:1px solid #2a2f3a;
+      font-weight:bold;
+      font-size:15px;
+    }
+    .order-block {
+      padding:16px;
+    }
+    .amount-input {
+      width:100%;
+      padding:10px;
+      background:#1f2937;
+      border:1px solid #374151;
+      color:white;
+      border-radius:6px;
+      margin:12px 0;
+      font-size:16px;
+    }
+    .btn-trade {
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:6px;
+      font-size:17px;
+      font-weight:bold;
+      cursor:pointer;
+      margin:8px 0;
+    }
+    .buy { background:#10b981; color:black; }
+    .sell { background:#ef4444; color:white; }
+    
+    .bottom-bar {
+      height:180px;
+      background:#111827;
+      border-top:1px solid #2a2f3a;
+      position:absolute;
+      bottom:0;
+      left:0;
+      right:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .tabs {
+      display:flex;
+      border-bottom:1px solid #2a2f3a;
+    }
+    .tab {
+      padding:10px 18px;
+      cursor:pointer;
+      color:#9ca3af;
+    }
+    .tab.active { 
+      color:white; 
+      border-bottom:2px solid #2962ff; 
+      background:#1f2937;
+    }
+    .history {
+      flex:1;
+      padding:12px;
+      overflow-y:auto;
+      font-size:13px;
+    }
+    .trade-item {
+      display:flex;
+      justify-content:space-between;
+      padding:6px 0;
+      border-bottom:1px solid #2a2f3a;
+    }
+    .win { color:#10b981; }
+    .loss { color:#ef4444; }
   </style>
 </head>
-
 <body>
 
-<div class="topbar">
-  <div>AI Broker Platform</div>
+<div class="header">
+  <div class="logo">AI BROKER</div>
+  
+  <select id="symbolSelect" class="symbol-select" onchange="changeSymbol()">
+    <option value="BINANCE:BTCUSDT">BTC/USDT</option>
+    <option value="BINANCE:ETHUSDT">ETH/USDT</option>
+    <option value="FX:EURUSD">EUR/USD</option>
+    <option value="FX:GBPUSD">GBP/USD</option>
+    <option value="OANDA:XAUUSD">XAU/USD</option>
+    <option value="OANDA:BCOUSD">Brent Oil</option>
+  </select>
 
-  <div class="controls">
-    <select id="symbolSelect" onchange="changeSymbol()">
-      <option value="BINANCE:BTCUSDT">BTC/USDT</option>
-      <option value="BINANCE:ETHUSDT">ETH/USDT</option>
-      <option value="FX:EURUSD">EUR/USD</option>
-      <option value="FX:GBPUSD">GBP/USD</option>
-      <option value="OANDA:XAUUSD">Gold (XAU/USD)</option>
-      <option value="OANDA:BCOUSD">Oil (Brent)</option>
-    </select>
-
-    <input type="number" id="amount" value="100" min="1" />
-
-    <button class="buy" onclick="trade('buy')">BUY</button>
-    <button class="sell" onclick="trade('sell')">SELL</button>
+  <div>
+    <button class="timeframe-btn active" data-interval="1">1m</button>
+    <button class="timeframe-btn" data-interval="5">5m</button>
+    <button class="timeframe-btn" data-interval="15">15m</button>
+    <button class="timeframe-btn" data-interval="60">1H</button>
+    <button class="timeframe-btn" data-interval="240">4H</button>
+    <button class="timeframe-btn" data-interval="1D">1D</button>
   </div>
 
-  <div class="balance">Balance: $<span id="balance">10000</span></div>
+  <div class="spacer"></div>
+
+  <div class="balance">Баланс: $<span id="balance">10000.00</span></div>
 </div>
 
-<div id="chart"></div>
+<div class="main">
+  <div id="chart-container">
+    <div id="chart"></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="panel-header">Торговля</div>
+    <div class="order-block">
+      <input type="number" id="amount" class="amount-input" value="100" min="1" step="10" placeholder="Сумма ($)" />
+      <button class="btn-trade buy" onclick="trade('buy')">BUY / LONG</button>
+      <button class="btn-trade sell" onclick="trade('sell')">SELL / SHORT</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <div class="tabs">
+    <div class="tab active">История сделок</div>
+    <div class="tab">Открытые позиции (0)</div>
+  </div>
+  <div class="history" id="history">
+    <!-- сюда будут добавляться сделки -->
+  </div>
+</div>
 
 <script>
 let balance = 10000;
 let widget;
+let trades = [];
 
-function loadChart(symbol) {
-  document.getElementById("chart").innerHTML = "";
+const chartContainer = document.getElementById("chart");
+const historyEl = document.getElementById("history");
+const balanceEl = document.getElementById("balance");
+
+function loadChart(symbol, interval = "15") {
+  chartContainer.innerHTML = "";
   widget = new TradingView.widget({
     "width": "100%",
     "height": "100%",
     "symbol": symbol,
-    "interval": "15",
+    "interval": interval,
     "theme": "dark",
     "style": "1",
     "locale": "ru",
+    "toolbar_bg": "#0e111a",
+    "enable_publishing": false,
+    "allow_symbol_change": false,
     "container_id": "chart"
   });
 }
 
 function changeSymbol() {
-  let symbol = document.getElementById("symbolSelect").value;
-  loadChart(symbol);
+  loadChart(document.getElementById("symbolSelect").value);
 }
 
+// смена таймфрейма
+document.querySelectorAll('.timeframe-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadChart(document.getElementById("symbolSelect").value, btn.dataset.interval);
+  });
+});
+
 function trade(type) {
-  let amount = parseFloat(document.getElementById("amount").value);
-  if (amount > balance) {
-    alert("Недостаточно средств!");
+  let amount = parseFloat(document.getElementById("amount").value) || 100;
+  if (amount > balance || amount <= 0) {
+    alert("Недостаточно средств или неверная сумма!");
     return;
   }
 
-  // простая симуляция 50/50
-  let win = Math.random() > 0.5;
+  // 50/50 симуляция + немного разброс
+  let change = (Math.random() > 0.5 ? 1 : -1) * amount * (0.4 + Math.random() * 1.2);
+  
+  balance += change;
+  balance = Math.max(0, balance);
 
-  if (win) {
-    balance += amount * 0.8;
-    alert("Сделка в плюсе 🚀");
-  } else {
-    balance -= amount;
-    alert("Сделка в минусе 📉");
-  }
+  const result = change >= 0 ? 'win' : 'loss';
+  const sign = change >= 0 ? '+' : '';
+  
+  const time = new Date().toLocaleTimeString();
+  const symbol = document.getElementById("symbolSelect").value.split(':').pop();
+  
+  trades.unshift({
+    time, symbol, type: type.toUpperCase(), amount, change
+  });
 
-  document.getElementById("balance").innerText = balance.toFixed(2);
+  // обновляем историю (последние 12 сделок)
+  historyEl.innerHTML = trades.slice(0,12).map(t => `
+    <div class="trade-item">
+      <span>${t.time} ${t.symbol} ${t.type}</span>
+      <span class="${t.change >= 0 ? 'win' : 'loss'}">${sign}${t.change.toFixed(2)}$</span>
+    </div>
+  `).join('');
+
+  balanceEl.innerText = balance.toFixed(2);
+
+  alert(change >= 0 
+    ? `Успешная сделка! +${change.toFixed(2)}$ 🚀` 
+    : `Убыток ${change.toFixed(2)}$ 📉`);
 }
 
-loadChart("BINANCE:BTCUSDT");
+loadChart("BINANCE:BTCUSDT", "15");
 </script>
-
 </body>
 </html>
