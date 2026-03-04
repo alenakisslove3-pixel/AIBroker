@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>PRO DEMO TERMINAL</title>
+
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#0b1426;
+  color:#e6edf7;
+  font-family:Arial;
+  overflow:hidden;
+}
+
+.container{
+  display:flex;
+  height:100vh;
+}
+
+/* LEFT PANEL */
+.sidebar{
+  width:220px;
+  background:#0f1c33;
+  border-right:1px solid #1e2d4d;
+  overflow-y:auto;
+}
+
+.sidebar h3{
+  padding:10px;
+  margin:0;
+  font-size:14px;
+  color:#4da3ff;
+}
+
+.asset{
+  padding:8px 12px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.asset:hover{
+  background:#1a2b4d;
+}
+
+/* CENTER */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.chart{
+  flex:1;
+}
+
+/* RIGHT PANEL */
+.trade-panel{
+  width:300px;
+  background:#0f1c33;
+  border-left:1px solid #1e2d4d;
+  padding:15px;
+}
+
+input, select{
+  width:100%;
+  padding:6px;
+  margin:5px 0;
+  background:#162644;
+  border:1px solid #233a66;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+}
+
+.buy{
+  background:#00c853;
+  color:white;
+}
+
+.sell{
+  background:#d50000;
+  color:white;
+}
+
+/* BOTTOM PANEL */
+.bottom{
+  height:40px;
+  background:#0f1c33;
+  border-top:1px solid #1e2d4d;
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- LEFT MARKETS -->
+  <div class="sidebar">
+
+    <h3>CRYPTO</h3>
+    <div class="asset" onclick="selectAsset('BTCUSDT')">BTCUSDT</div>
+    <div class="asset" onclick="selectAsset('ETHUSDT')">ETHUSDT</div>
+    <div class="asset" onclick="selectAsset('BNBUSDT')">BNBUSDT</div>
+    <div class="asset" onclick="selectAsset('SOLUSDT')">SOLUSDT</div>
+    <div class="asset" onclick="selectAsset('XRPUSDT')">XRPUSDT</div>
+    <div class="asset" onclick="selectAsset('ADAUSDT')">ADAUSDT</div>
+    <div class="asset" onclick="selectAsset('DOGEUSDT')">DOGEUSDT</div>
+    <div class="asset" onclick="selectAsset('AVAXUSDT')">AVAXUSDT</div>
+    <div class="asset" onclick="selectAsset('TONUSDT')">TONUSDT</div>
+    <div class="asset" onclick="selectAsset('DOTUSDT')">DOTUSDT</div>
+
+    <h3>FOREX</h3>
+    <div class="asset" onclick="selectAsset('EURUSD')">EURUSD</div>
+    <div class="asset" onclick="selectAsset('GBPUSD')">GBPUSD</div>
+    <div class="asset" onclick="selectAsset('USDJPY')">USDJPY</div>
+    <div class="asset" onclick="selectAsset('USDCHF')">USDCHF</div>
+    <div class="asset" onclick="selectAsset('AUDUSD')">AUDUSD</div>
+    <div class="asset" onclick="selectAsset('USDCAD')">USDCAD</div>
+    <div class="asset" onclick="selectAsset('NZDUSD')">NZDUSD</div>
+
+    <h3>METALS</h3>
+    <div class="asset" onclick="selectAsset('XAUUSD')">XAUUSD</div>
+    <div class="asset" onclick="selectAsset('XAGUSD')">XAGUSD</div>
+    <div class="asset" onclick="selectAsset('XPTUSD')">XPTUSD</div>
+    <div class="asset" onclick="selectAsset('XPDUSD')">XPDUSD</div>
+
+    <h3>OIL</h3>
+    <div class="asset" onclick="selectAsset('XTIUSD')">WTI</div>
+    <div class="asset" onclick="selectAsset('XBRUSD')">BRENT</div>
+    <div class="asset" onclick="selectAsset('URALS')">URALS</div>
+
+    <h3>STOCKS</h3>
+    <div class="asset" onclick="selectAsset('AAPL')">AAPL</div>
+    <div class="asset" onclick="selectAsset('TSLA')">TSLA</div>
+    <div class="asset" onclick="selectAsset('NVDA')">NVDA</div>
+    <div class="asset" onclick="selectAsset('MSFT')">MSFT</div>
+    <div class="asset" onclick="selectAsset('AMZN')">AMZN</div>
+    <div class="asset" onclick="selectAsset('META')">META</div>
+    <div class="asset" onclick="selectAsset('GOOGL')">GOOGL</div>
+    <div class="asset" onclick="selectAsset('NFLX')">NFLX</div>
+    <div class="asset" onclick="selectAsset('AMD')">AMD</div>
+    <div class="asset" onclick="selectAsset('JPM')">JPM</div>
+
+  </div>
+
+  <!-- CENTER -->
+  <div class="main">
+    <div id="chart" class="chart"></div>
+
+    <div class="bottom">
+      <div>Balance: <span id="balance">10000</span>$</div>
+      <div>Equity: <span id="equity">10000</span>$</div>
+      <div>Margin: <span id="margin">0</span>$</div>
+      <div>Free: <span id="free">10000</span>$</div>
+      <div>PnL: <span id="pnl">0</span>$</div>
+      <div>Margin Level: <span id="ml">0</span>%</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="trade-panel">
+
+    <h3>TRADE</h3>
+
+    <label>Order Type</label>
+    <select id="orderType">
+      <option value="market">Market</option>
+      <option value="limit">Limit</option>
+    </select>
+
+    <label>Volume ($)</label>
+    <input type="number" id="volume" value="1000">
+
+    <label>Leverage</label>
+    <select id="leverage">
+      <option>50</option>
+      <option>100</option>
+      <option>200</option>
+      <option>500</option>
+    </select>
+
+    <label>Stop Loss</label>
+    <input type="number" id="sl">
+
+    <label>Take Profit</label>
+    <input type="number" id="tp">
+
+    <button class="buy" onclick="openTrade('buy')">BUY</button>
+    <button class="sell" onclick="openTrade('sell')">SELL</button>
+
+  </div>
+
+</div>
+
+<script>
+
+let currentAsset = "BTCUSDT";
+let currentPrice = 0;
+
+function selectAsset(asset){
+  currentAsset = asset;
+  loadChart(asset);
+}
+
+function loadChart(symbol){
+  document.getElementById("chart").innerHTML="";
+  new TradingView.widget({
+    container_id:"chart",
+    symbol:"BINANCE:"+symbol,
+    interval:"15",
+    theme:"dark",
+    width:"100%",
+    height:"100%"
+  });
+}
+
+loadChart(currentAsset);
+
+</script>
+
+</body>
+</html>
