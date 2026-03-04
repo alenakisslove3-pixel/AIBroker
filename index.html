@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <title>AI Broker Terminal</title>
+
 <script src="https://s3.tradingview.com/tv.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -25,7 +27,7 @@ body {
   padding:0 12px;
 }
 
-.logo { font-weight:bold; color:#2962ff; margin-right:20px; }
+.logo { font-weight:bold; color:#2962ff; }
 
 .balance {
   color:#10b981;
@@ -66,7 +68,6 @@ body {
   color:white;
   border-radius:6px;
   margin:12px 0;
-  font-size:16px;
 }
 
 .btn-trade {
@@ -106,7 +107,7 @@ body {
 
 <body>
 
-<!-- AUTH SCREEN -->
+<!-- AUTH -->
 <div id="authScreen" style="
 position:fixed;
 inset:0;
@@ -114,8 +115,7 @@ background:#0e111a;
 display:flex;
 align-items:center;
 justify-content:center;
-z-index:9999;
-">
+z-index:9999;">
   <div style="background:#161b22;padding:40px;border-radius:10px;width:320px;">
     <h2 style="margin-bottom:20px;">AI Broker Login</h2>
 
@@ -161,28 +161,15 @@ z-index:9999;
 <div class="bottom-bar" id="history"></div>
 
 <script>
-let currentUser = localStorage.getItem("aiBrokerCurrentUser");
-let balance = 0;
+const supabaseUrl = "https://riksxwgfzzheeepzzell.supabase.co";
+const supabaseKey = "sb_publishable_Vp9Eq6BmzEMg60wEjFbUJA_lwNtAu74";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let balance = 10000;
 let trades = [];
 
 const balanceEl = document.getElementById("balance");
 const historyEl = document.getElementById("history");
-
-function saveUserData() {
-  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
-  users[currentUser].balance = balance;
-  users[currentUser].trades = trades;
-  localStorage.setItem("aiBrokerUsers", JSON.stringify(users));
-}
-
-function loadUserData() {
-  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
-  const user = users[currentUser];
-  balance = user.balance;
-  trades = user.trades;
-  balanceEl.innerText = balance.toFixed(2);
-  renderHistory();
-}
 
 function renderHistory() {
   historyEl.innerHTML = trades.map(t => `
@@ -195,40 +182,33 @@ function renderHistory() {
   `).join("") || "Сделок пока нет";
 }
 
-function register() {
+async function register() {
   const email = authEmail.value;
   const password = authPassword.value;
-  if (!email || !password) return alert("Введите данные");
 
-  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
-  if (users[email]) return alert("Пользователь уже существует");
+  const { error } = await supabase.auth.signUp({ email, password });
+  if (error) return alert(error.message);
 
-  users[email] = { password, balance:10000, trades:[] };
-  localStorage.setItem("aiBrokerUsers", JSON.stringify(users));
-  alert("Регистрация успешна");
+  alert("Регистрация успешна!");
 }
 
-function login() {
+async function login() {
   const email = authEmail.value;
   const password = authPassword.value;
-  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
 
-  if (!users[email] || users[email].password !== password)
-    return alert("Неверные данные");
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return alert(error.message);
 
-  currentUser = email;
-  localStorage.setItem("aiBrokerCurrentUser", email);
-  loadUserData();
-  authScreen.style.display = "none";
+  document.getElementById("authScreen").style.display = "none";
 }
 
 function logout() {
-  localStorage.removeItem("aiBrokerCurrentUser");
+  supabase.auth.signOut();
   location.reload();
 }
 
 function trade(type) {
-  let amount = parseFloat(amount.value) || 100;
+  const amount = parseFloat(document.getElementById("amount").value) || 100;
   if (amount > balance) return alert("Недостаточно средств");
 
   let percent = (Math.random()*4 - 2);
@@ -244,7 +224,6 @@ function trade(type) {
 
   balanceEl.innerText = balance.toFixed(2);
   renderHistory();
-  saveUserData();
 }
 
 function loadChart() {
@@ -258,12 +237,13 @@ function loadChart() {
   });
 }
 
-if (currentUser) {
-  loadUserData();
-  authScreen.style.display = "none";
-}
-
 loadChart();
+
+supabase.auth.getSession().then(({ data }) => {
+  if (data.session) {
+    document.getElementById("authScreen").style.display = "none";
+  }
+});
 </script>
 
 </body>
