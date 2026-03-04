@@ -1,233 +1,132 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<title>AI Broker Terminal</title>
+<meta charset="UTF-8">
+<title>AI Broker</title>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 body{
   background:#0e111a;
-  color:#e1e6f0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  height:100vh;
-  overflow:hidden;
+  color:white;
+  font-family:Arial;
+  margin:0;
 }
-.header{
-  height:50px;
-  background:#161b22;
-  border-bottom:1px solid #2a2f3a;
+#authScreen{
+  position:fixed;
+  inset:0;
+  background:#0e111a;
   display:flex;
   align-items:center;
-  padding:0 12px;
+  justify-content:center;
 }
-.logo{font-weight:bold;color:#2962ff}
-.balance{color:#10b981;font-weight:bold;margin-left:auto}
-.logout-btn{
-  margin-left:12px;
-  padding:4px 8px;
-  background:#ef4444;
-  border:none;
-  color:white;
-  border-radius:4px;
-  cursor:pointer;
-}
-.main{
-  display:flex;
-  height:calc(100vh - 50px - 180px);
-}
-#chart-container{flex:1;position:relative}
-#chart{position:absolute;inset:0}
-.right-panel{
-  width:360px;
+.auth-box{
   background:#161b22;
-  border-left:1px solid #2a2f3a;
-  padding:20px;
+  padding:30px;
+  width:300px;
+  border-radius:8px;
 }
-.amount-input{
+input{
   width:100%;
   padding:10px;
+  margin-bottom:10px;
   background:#1f2937;
-  border:1px solid #374151;
+  border:1px solid #333;
   color:white;
-  border-radius:6px;
-  margin:12px 0;
 }
-.btn-trade{
+button{
   width:100%;
-  padding:14px;
+  padding:10px;
+  margin-bottom:8px;
   border:none;
-  border-radius:6px;
-  font-size:17px;
-  font-weight:bold;
   cursor:pointer;
-  margin:8px 0;
 }
-.buy{background:#10b981;color:black}
-.sell{background:#ef4444;color:white}
-.bottom-bar{
-  height:180px;
-  background:#111827;
-  border-top:1px solid #2a2f3a;
-  overflow:auto;
-  padding:12px;
-}
-.trade-item{
-  display:flex;
-  justify-content:space-between;
-  padding:6px 0;
-  border-bottom:1px solid #2a2f3a;
-  font-size:13px;
-}
-.win{color:#10b981}
-.loss{color:#ef4444}
+.login{background:#2962ff;color:white;}
+.register{background:#10b981;color:black;}
 </style>
 </head>
 
 <body>
 
-<!-- AUTH SCREEN -->
-<div id="authScreen" style="
-position:fixed;
-inset:0;
-background:#0e111a;
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:9999;">
-  <div style="background:#161b22;padding:40px;border-radius:10px;width:320px;">
-    <h2 style="margin-bottom:20px;">AI Broker Login</h2>
-
-    <input id="authEmail" type="email" placeholder="Email"
-      style="width:100%;padding:10px;margin-bottom:10px;background:#1f2937;border:1px solid #374151;color:white;border-radius:6px;" />
-
-    <input id="authPassword" type="password" placeholder="Пароль"
-      style="width:100%;padding:10px;margin-bottom:15px;background:#1f2937;border:1px solid #374151;color:white;border-radius:6px;" />
-
-    <button onclick="login()"
-      style="width:100%;padding:10px;background:#2962ff;color:white;border:none;border-radius:6px;margin-bottom:8px;">
-      Войти
-    </button>
-
-    <button onclick="register()"
-      style="width:100%;padding:10px;background:#10b981;color:black;border:none;border-radius:6px;">
-      Регистрация
-    </button>
+<div id="authScreen">
+  <div class="auth-box">
+    <h2>AI Broker Login</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button class="login" onclick="login()">Login</button>
+    <button class="register" onclick="register()">Register</button>
   </div>
 </div>
 
-<div class="header">
-  <div class="logo">AI BROKER TERMINAL</div>
-  <div class="balance">
-    Баланс: $<span id="balance">10000.00</span>
-    <button class="logout-btn" onclick="logout()">Выйти</button>
-  </div>
+<div id="app" style="display:none;">
+  <h2 style="padding:10px;">Добро пожаловать</h2>
+  <button onclick="logout()">Logout</button>
+  <div id="chart" style="height:500px;"></div>
 </div>
 
-<div class="main">
-  <div id="chart-container">
-    <div id="chart"></div>
-  </div>
-
-  <div class="right-panel">
-    <h3>Панель ордеров</h3>
-    <input type="number" id="amount" class="amount-input" value="100" min="1" step="10" />
-    <button class="btn-trade buy" onclick="trade('buy')">BUY / LONG</button>
-    <button class="btn-trade sell" onclick="trade('sell')">SELL / SHORT</button>
-  </div>
-</div>
-
-<div class="bottom-bar" id="history"></div>
-
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-const supabaseClient = createClient(
-  "https://riksxwgfzzheeepzzell.supabase.co",
+<script>
+const supabaseClient = supabase.createClient(
+  "https://rixkswgfzzheeepzzell.supabase.co",
   "sb_publishable_Vp9Eq6BmzEMg60wEjFbUJA_lwNtAu74"
 );
 
-let balance = 10000;
-let trades = [];
+async function register(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-const balanceEl = document.getElementById("balance");
-const historyEl = document.getElementById("history");
-
-/* AUTH */
-window.register = async function () {
-  const email = document.getElementById("authEmail").value;
-  const password = document.getElementById("authPassword").value;
-
-  const { error } = await supabaseClient.auth.signUp({ email, password });
-  if (error) return alert(error.message);
-
-  alert("Регистрация успешна! Проверь почту.");
-};
-
-window.login = async function () {
-  const email = document.getElementById("authEmail").value;
-  const password = document.getElementById("authPassword").value;
-
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) return alert(error.message);
-
-  document.getElementById("authScreen").style.display = "none";
-};
-
-window.logout = async function () {
-  await supabaseClient.auth.signOut();
-  location.reload();
-};
-
-supabaseClient.auth.getSession().then(({ data }) => {
-  if (data.session) {
-    document.getElementById("authScreen").style.display = "none";
-  }
-});
-
-/* TRADING */
-window.trade = function (type) {
-  const amount = parseFloat(document.getElementById("amount").value);
-  if (!amount || amount <= 0) return alert("Введите сумму");
-  if (amount > balance) return alert("Недостаточно средств");
-
-  const percent = (Math.random() * 4 - 2);
-  const change = amount * percent / 100;
-
-  balance += change;
-
-  trades.unshift({
-    time: new Date().toLocaleString(),
-    type,
-    amount,
-    change
+  const { error } = await supabaseClient.auth.signUp({
+    email: email,
+    password: password
   });
 
-  balanceEl.innerText = balance.toFixed(2);
-  renderHistory();
-};
-
-function renderHistory() {
-  historyEl.innerHTML = trades.map(t => `
-    <div class="trade-item">
-      <span>${t.time} ${t.type.toUpperCase()} $${t.amount}</span>
-      <span class="${t.change>=0?'win':'loss'}">
-        ${(t.change>=0?'+':'')}${t.change.toFixed(2)}$
-      </span>
-    </div>
-  `).join("") || "Сделок пока нет";
+  if(error){
+    alert(error.message);
+  } else {
+    alert("Регистрация успешна! Проверь почту.");
+  }
 }
 
-/* CHART */
-new TradingView.widget({
-  width:"100%",
-  height:"100%",
-  symbol:"BINANCE:BTCUSDT",
-  interval:"15",
-  theme:"dark",
-  container_id:"chart"
+async function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if(error){
+    alert(error.message);
+  } else {
+    showApp();
+  }
+}
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+function showApp(){
+  document.getElementById("authScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+
+  new TradingView.widget({
+    width:"100%",
+    height:500,
+    symbol:"BINANCE:BTCUSDT",
+    interval:"15",
+    theme:"dark",
+    container_id:"chart"
+  });
+}
+
+supabaseClient.auth.getSession().then(({data})=>{
+  if(data.session){
+    showApp();
+  }
 });
 </script>
 
