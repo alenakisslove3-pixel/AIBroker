@@ -1,20 +1,120 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>AI Broker Terminal</title>
-  <script src="https://s3.tradingview.com/tv.js"></script>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      <div id="authScreen" style="
-  position:fixed;
-  inset:0;
+<meta charset="UTF-8" />
+<title>AI Broker Terminal</title>
+<script src="https://s3.tradingview.com/tv.js"></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
   background:#0e111a;
+  color:#e1e6f0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  height:100vh;
+  overflow:hidden;
+}
+
+.header {
+  height:50px;
+  background:#161b22;
+  border-bottom:1px solid #2a2f3a;
   display:flex;
   align-items:center;
-  justify-content:center;
-  z-index:9999;
+  padding:0 12px;
+}
+
+.logo { font-weight:bold; color:#2962ff; margin-right:20px; }
+
+.balance {
+  color:#10b981;
+  font-weight:bold;
+  margin-left:auto;
+}
+
+.logout-btn {
+  margin-left:12px;
+  padding:4px 8px;
+  background:#ef4444;
+  border:none;
+  color:white;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.main {
+  display:flex;
+  height:calc(100vh - 50px - 180px);
+}
+
+#chart-container { flex:1; position:relative; }
+#chart { position:absolute; inset:0; }
+
+.right-panel {
+  width:360px;
+  background:#161b22;
+  border-left:1px solid #2a2f3a;
+  padding:20px;
+}
+
+.amount-input {
+  width:100%;
+  padding:10px;
+  background:#1f2937;
+  border:1px solid #374151;
+  color:white;
+  border-radius:6px;
+  margin:12px 0;
+  font-size:16px;
+}
+
+.btn-trade {
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:6px;
+  font-size:17px;
+  font-weight:bold;
+  cursor:pointer;
+  margin:8px 0;
+}
+
+.buy { background:#10b981; color:black; }
+.sell { background:#ef4444; color:white; }
+
+.bottom-bar {
+  height:180px;
+  background:#111827;
+  border-top:1px solid #2a2f3a;
+  overflow:auto;
+  padding:12px;
+}
+
+.trade-item {
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid #2a2f3a;
+  font-size:13px;
+}
+
+.win { color:#10b981; }
+.loss { color:#ef4444; }
+</style>
+</head>
+
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" style="
+position:fixed;
+inset:0;
+background:#0e111a;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
 ">
   <div style="background:#161b22;padding:40px;border-radius:10px;width:320px;">
     <h2 style="margin-bottom:20px;">AI Broker Login</h2>
@@ -36,170 +136,13 @@
     </button>
   </div>
 </div>
-      background:#0e111a;
-      color:#e1e6f0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      height:100vh;
-      overflow:hidden;
-    }
-    .header {
-      height:50px;
-      background:#161b22;
-      border-bottom:1px solid #2a2f3a;
-      display:flex;
-      align-items:center;
-      padding:0 12px;
-      font-size:14px;
-    }
-    .logo { font-weight:bold; color:#2962ff; margin-right:20px; }
-    .symbol-select {
-      background:#1f2937;
-      border:1px solid #374151;
-      color:white;
-      padding:6px 10px;
-      border-radius:4px;
-      margin-right:12px;
-    }
-    .timeframe-btn, .tool-btn {
-      background:#1f2937;
-      border:1px solid #374151;
-      color:#9ca3af;
-      padding:6px 10px;
-      margin:0 2px;
-      border-radius:4px;
-      cursor:pointer;
-    }
-    .timeframe-btn.active, .timeframe-btn:hover, .tool-btn:hover {
-      background:#2962ff;
-      color:white;
-      border-color:#2962ff;
-    }
-    .spacer { flex:1; }
-    .balance { color:#10b981; font-weight:bold; margin-right:16px; }
-    
-    .main {
-      display:flex;
-      height:calc(100vh - 50px - 180px);
-    }
-    #chart-container {
-      flex:1;
-      position:relative;
-    }
-    #chart { 
-      position:absolute; 
-      inset:0; 
-    }
-    
-    .right-panel {
-      width:360px;
-      background:#161b22;
-      border-left:1px solid #2a2f3a;
-      display:flex;
-      flex-direction:column;
-    }
-    .panel-header {
-      padding:12px;
-      border-bottom:1px solid #2a2f3a;
-      font-weight:bold;
-      font-size:15px;
-    }
-    .order-block {
-      padding:16px;
-    }
-    .amount-input {
-      width:100%;
-      padding:10px;
-      background:#1f2937;
-      border:1px solid #374151;
-      color:white;
-      border-radius:6px;
-      margin:12px 0;
-      font-size:16px;
-    }
-    .btn-trade {
-      width:100%;
-      padding:14px;
-      border:none;
-      border-radius:6px;
-      font-size:17px;
-      font-weight:bold;
-      cursor:pointer;
-      margin:8px 0;
-    }
-    .buy { background:#10b981; color:black; }
-    .sell { background:#ef4444; color:white; }
-    
-    .bottom-bar {
-      height:180px;
-      background:#111827;
-      border-top:1px solid #2a2f3a;
-      position:absolute;
-      bottom:0;
-      left:0;
-      right:0;
-      display:flex;
-      flex-direction:column;
-    }
-    .tabs {
-      display:flex;
-      border-bottom:1px solid #2a2f3a;
-    }
-    .tab {
-      padding:10px 18px;
-      cursor:pointer;
-      color:#9ca3af;
-    }
-    .tab.active { 
-      color:white; 
-      border-bottom:2px solid #2962ff; 
-      background:#1f2937;
-    }
-    .history, .positions {
-      flex:1;
-      padding:12px;
-      overflow-y:auto;
-      font-size:13px;
-      display:none;
-    }
-    .history.active, .positions.active { display:block; }
-    .trade-item, .pos-item {
-      display:flex;
-      justify-content:space-between;
-      padding:6px 0;
-      border-bottom:1px solid #2a2f3a;
-    }
-    .win { color:#10b981; }
-    .loss { color:#ef4444; }
-  </style>
-</head>
-<body>
 
 <div class="header">
   <div class="logo">AI BROKER TERMINAL</div>
-  
-  <select id="symbolSelect" class="symbol-select" onchange="changeSymbol()">
-    <option value="BINANCE:BTCUSDT">BTC/USDT</option>
-    <option value="BINANCE:ETHUSDT">ETH/USDT</option>
-    <option value="FX:EURUSD">EUR/USD</option>
-    <option value="FX:GBPUSD">GBP/USD</option>
-    <option value="OANDA:XAUUSD">XAU/USD Gold</option>
-    <option value="OANDA:BCOUSD">Brent Oil</option>
-  </select>
-
-  <div>
-    <button class="timeframe-btn active" data-interval="1">1m</button>
-    <button class="timeframe-btn" data-interval="5">5m</button>
-    <button class="timeframe-btn" data-interval="15">15m</button>
-    <button class="timeframe-btn" data-interval="60">1H</button>
-    <button class="timeframe-btn" data-interval="240">4H</button>
-    <button class="timeframe-btn" data-interval="1D">1D</button>
+  <div class="balance">
+    Баланс: $<span id="balance">0.00</span>
+    <button class="logout-btn" onclick="logout()">Выйти</button>
   </div>
-
-  <button class="tool-btn" onclick="alert('Индикаторы: SMA, RSI, MACD, Bollinger и другие — скоро добавим!')">Индикаторы</button>
-
-  <div class="spacer"></div>
-
-  <div class="balance">Баланс: $<span id="balance">10000.00</span></div>
 </div>
 
 <div class="main">
@@ -208,130 +151,120 @@
   </div>
 
   <div class="right-panel">
-    <div class="panel-header">Панель ордеров</div>
-    <div class="order-block">
-      <input type="number" id="amount" class="amount-input" value="100" min="1" step="10" placeholder="Сумма ($)" />
-      <button class="btn-trade buy" onclick="trade('buy')">BUY / LONG</button>
-      <button class="btn-trade sell" onclick="trade('sell')">SELL / SHORT</button>
-    </div>
+    <h3>Панель ордеров</h3>
+    <input type="number" id="amount" class="amount-input" value="100" min="1" step="10" />
+    <button class="btn-trade buy" onclick="trade('buy')">BUY / LONG</button>
+    <button class="btn-trade sell" onclick="trade('sell')">SELL / SHORT</button>
   </div>
 </div>
 
-<div class="bottom-bar">
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('history')">История сделок</div>
-    <div class="tab" onclick="switchTab('positions')">Открытые позиции (0)</div>
-  </div>
-  <div class="history active" id="history"></div>
-  <div class="positions" id="positions">
-    <!-- Пока фейковые позиции, можно добавить логику открытия -->
-    <div class="pos-item">
-      <span>BTC/USDT LONG 0.01 @ 95000</span>
-      <span class="win">+2.4% ($240)</span>
-    </div>
-    <div class="pos-item">
-      <span>EUR/USD SHORT 1000 @ 1.0850</span>
-      <span class="loss">-0.8% (-$80)</span>
-    </div>
-  </div>
-</div>
+<div class="bottom-bar" id="history"></div>
 
 <script>
-let balance = localStorage.getItem('aiBrokerBalance') 
-  ? parseFloat(localStorage.getItem('aiBrokerBalance')) 
-  : 10000;
-let trades = JSON.parse(localStorage.getItem('aiBrokerTrades')) || [];
-let widget;
+let currentUser = localStorage.getItem("aiBrokerCurrentUser");
+let balance = 0;
+let trades = [];
 
-const chartContainer = document.getElementById("chart");
-const historyEl = document.getElementById("history");
 const balanceEl = document.getElementById("balance");
+const historyEl = document.getElementById("history");
 
-function saveState() {
-  localStorage.setItem('aiBrokerBalance', balance);
-  localStorage.setItem('aiBrokerTrades', JSON.stringify(trades));
+function saveUserData() {
+  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
+  users[currentUser].balance = balance;
+  users[currentUser].trades = trades;
+  localStorage.setItem("aiBrokerUsers", JSON.stringify(users));
 }
 
-function loadChart(symbol, interval = "15") {
-  chartContainer.innerHTML = "";
-  widget = new TradingView.widget({
-    "width": "100%",
-    "height": "100%",
-    "symbol": symbol,
-    "interval": interval,
-    "theme": "dark",
-    "style": "1",
-    "locale": "ru",
-    "toolbar_bg": "#0e111a",
-    "enable_publishing": false,
-    "allow_symbol_change": false,
-    "container_id": "chart"
-  });
+function loadUserData() {
+  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
+  const user = users[currentUser];
+  balance = user.balance;
+  trades = user.trades;
+  balanceEl.innerText = balance.toFixed(2);
+  renderHistory();
 }
 
-function changeSymbol() {
-  loadChart(document.getElementById("symbolSelect").value);
+function renderHistory() {
+  historyEl.innerHTML = trades.map(t => `
+    <div class="trade-item">
+      <span>${t.time} ${t.type.toUpperCase()} $${t.amount}</span>
+      <span class="${t.change>=0?'win':'loss'}">
+        ${(t.change>=0?'+':'')}${t.change.toFixed(2)}$
+      </span>
+    </div>
+  `).join("") || "Сделок пока нет";
 }
 
-document.querySelectorAll('.timeframe-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    loadChart(document.getElementById("symbolSelect").value, btn.dataset.interval);
-  });
-});
+function register() {
+  const email = authEmail.value;
+  const password = authPassword.value;
+  if (!email || !password) return alert("Введите данные");
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-  document.querySelectorAll('.history, .positions').forEach(el => el.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
+  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
+  if (users[email]) return alert("Пользователь уже существует");
+
+  users[email] = { password, balance:10000, trades:[] };
+  localStorage.setItem("aiBrokerUsers", JSON.stringify(users));
+  alert("Регистрация успешна");
+}
+
+function login() {
+  const email = authEmail.value;
+  const password = authPassword.value;
+  let users = JSON.parse(localStorage.getItem("aiBrokerUsers")) || {};
+
+  if (!users[email] || users[email].password !== password)
+    return alert("Неверные данные");
+
+  currentUser = email;
+  localStorage.setItem("aiBrokerCurrentUser", email);
+  loadUserData();
+  authScreen.style.display = "none";
+}
+
+function logout() {
+  localStorage.removeItem("aiBrokerCurrentUser");
+  location.reload();
 }
 
 function trade(type) {
-  let amount = parseFloat(document.getElementById("amount").value) || 100;
-  if (amount > balance || amount <= 0) {
-    alert("Недостаточно средств или неверная сумма!");
-    return;
-  }
+  let amount = parseFloat(amount.value) || 100;
+  if (amount > balance) return alert("Недостаточно средств");
 
-  let profitPercent = (Math.random() * 4 - 2).toFixed(2); // от -2% до +2% примерно
-  let change = amount * (profitPercent / 100);
-
+  let percent = (Math.random()*4 - 2);
+  let change = amount * percent / 100;
   balance += change;
-  balance = Math.max(0, balance.toFixed(2));
 
-  const result = change >= 0 ? 'win' : 'loss';
-  const sign = change >= 0 ? '+' : '';
-  
-  const time = new Date().toLocaleString('ru-RU', {hour12: false});
-  const symbol = document.getElementById("symbolSelect").value.split(':').pop();
-  
-  trades.unshift({ time, symbol, type: type.toUpperCase(), amount, change, percent: profitPercent });
-
-  historyEl.innerHTML = trades.slice(0, 20).map(t => `
-    <div class="trade-item">
-      <span>${t.time} ${t.symbol} ${t.type} $${t.amount}</span>
-      <span class="${t.change >= 0 ? 'win' : 'loss'}">${sign}${t.change.toFixed(2)}$ (${t.percent}%)</span>
-    </div>
-  `).join('');
+  trades.unshift({
+    time: new Date().toLocaleString(),
+    type,
+    amount,
+    change
+  });
 
   balanceEl.innerText = balance.toFixed(2);
-  saveState();
-
-  alert(change >= 0 
-    ? `Успех! +${change.toFixed(2)}$ (${profitPercent}%) 🚀` 
-    : `Убыток ${change.toFixed(2)}$ (${profitPercent}%) 📉`);
+  renderHistory();
+  saveUserData();
 }
 
-loadChart("BINANCE:BTCUSDT", "15");
-balanceEl.innerText = balance.toFixed(2);
-historyEl.innerHTML = trades.slice(0, 20).map(t => `
-  <div class="trade-item">
-    <span>${t.time} ${t.symbol} ${t.type} $${t.amount}</span>
-    <span class="${t.change >= 0 ? 'win' : 'loss'}">${(t.change >= 0 ? '+' : '')}${t.change.toFixed(2)}$ (${t.percent}%)</span>
-  </div>
-`).join('') || '<div style="color:#9ca3af; text-align:center; padding:20px;">Сделок пока нет</div>';
+function loadChart() {
+  new TradingView.widget({
+    width:"100%",
+    height:"100%",
+    symbol:"BINANCE:BTCUSDT",
+    interval:"15",
+    theme:"dark",
+    container_id:"chart"
+  });
+}
+
+if (currentUser) {
+  loadUserData();
+  authScreen.style.display = "none";
+}
+
+loadChart();
 </script>
+
 </body>
 </html>
