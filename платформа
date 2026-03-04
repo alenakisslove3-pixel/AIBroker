@@ -1,207 +1,123 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>PRO DEMO TERMINAL</title>
+<title>AI Broker DEMO</title>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 
 <style>
 body{
   margin:0;
-  background:#0b1426;
-  color:#e6edf7;
   font-family:Arial;
-  overflow:hidden;
+  background:#0f172a;
+  color:white;
+}
+
+header{
+  background:#111827;
+  padding:15px;
+  font-size:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .container{
   display:flex;
-  height:100vh;
+  height:calc(100vh - 60px);
 }
 
-/* LEFT PANEL */
-.sidebar{
-  width:220px;
-  background:#0f1c33;
-  border-right:1px solid #1e2d4d;
-  overflow-y:auto;
+#chart{
+  flex:3;
 }
 
-.sidebar h3{
-  padding:10px;
-  margin:0;
-  font-size:14px;
-  color:#4da3ff;
-}
-
-.asset{
-  padding:8px 12px;
-  cursor:pointer;
-  font-size:13px;
-}
-
-.asset:hover{
-  background:#1a2b4d;
-}
-
-/* CENTER */
-.main{
+.panel{
   flex:1;
+  background:#1e293b;
+  padding:20px;
   display:flex;
   flex-direction:column;
+  gap:10px;
 }
 
-.chart{
-  flex:1;
-}
-
-/* RIGHT PANEL */
-.trade-panel{
-  width:300px;
-  background:#0f1c33;
-  border-left:1px solid #1e2d4d;
-  padding:15px;
-}
-
-input, select{
-  width:100%;
-  padding:6px;
-  margin:5px 0;
-  background:#162644;
-  border:1px solid #233a66;
-  color:white;
+input, select, button{
+  padding:8px;
+  border:none;
+  border-radius:4px;
 }
 
 button{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  font-weight:bold;
-  border:none;
   cursor:pointer;
+  font-weight:bold;
 }
 
 .buy{
-  background:#00c853;
+  background:#16a34a;
   color:white;
 }
 
 .sell{
-  background:#d50000;
+  background:#dc2626;
   color:white;
 }
 
-/* BOTTOM PANEL */
-.bottom{
-  height:40px;
-  background:#0f1c33;
-  border-top:1px solid #1e2d4d;
-  display:flex;
-  align-items:center;
-  justify-content:space-around;
-  font-size:13px;
+.stats{
+  background:#0f172a;
+  padding:10px;
+  margin-top:10px;
+  font-size:14px;
 }
 </style>
 </head>
 
 <body>
 
+<header>
+  <div>AI Broker DEMO</div>
+  <div>Balance: $<span id="balance">10000</span></div>
+</header>
+
 <div class="container">
 
-  <!-- LEFT MARKETS -->
-  <div class="sidebar">
+  <div id="chart"></div>
 
-    <h3>CRYPTO</h3>
-    <div class="asset" onclick="selectAsset('BTCUSDT')">BTCUSDT</div>
-    <div class="asset" onclick="selectAsset('ETHUSDT')">ETHUSDT</div>
-    <div class="asset" onclick="selectAsset('BNBUSDT')">BNBUSDT</div>
-    <div class="asset" onclick="selectAsset('SOLUSDT')">SOLUSDT</div>
-    <div class="asset" onclick="selectAsset('XRPUSDT')">XRPUSDT</div>
-    <div class="asset" onclick="selectAsset('ADAUSDT')">ADAUSDT</div>
-    <div class="asset" onclick="selectAsset('DOGEUSDT')">DOGEUSDT</div>
-    <div class="asset" onclick="selectAsset('AVAXUSDT')">AVAXUSDT</div>
-    <div class="asset" onclick="selectAsset('TONUSDT')">TONUSDT</div>
-    <div class="asset" onclick="selectAsset('DOTUSDT')">DOTUSDT</div>
+  <div class="panel">
 
-    <h3>FOREX</h3>
-    <div class="asset" onclick="selectAsset('EURUSD')">EURUSD</div>
-    <div class="asset" onclick="selectAsset('GBPUSD')">GBPUSD</div>
-    <div class="asset" onclick="selectAsset('USDJPY')">USDJPY</div>
-    <div class="asset" onclick="selectAsset('USDCHF')">USDCHF</div>
-    <div class="asset" onclick="selectAsset('AUDUSD')">AUDUSD</div>
-    <div class="asset" onclick="selectAsset('USDCAD')">USDCAD</div>
-    <div class="asset" onclick="selectAsset('NZDUSD')">NZDUSD</div>
+    <select id="asset" onchange="changeAsset()">
+      <option value="BTCUSDT">BTCUSDT</option>
+      <option value="ETHUSDT">ETHUSDT</option>
+      <option value="BNBUSDT">BNBUSDT</option>
+      <option value="XAUUSD">Gold</option>
+      <option value="EURUSD">EURUSD</option>
+    </select>
 
-    <h3>METALS</h3>
-    <div class="asset" onclick="selectAsset('XAUUSD')">XAUUSD</div>
-    <div class="asset" onclick="selectAsset('XAGUSD')">XAGUSD</div>
-    <div class="asset" onclick="selectAsset('XPTUSD')">XPTUSD</div>
-    <div class="asset" onclick="selectAsset('XPDUSD')">XPDUSD</div>
-
-    <h3>OIL</h3>
-    <div class="asset" onclick="selectAsset('XTIUSD')">WTI</div>
-    <div class="asset" onclick="selectAsset('XBRUSD')">BRENT</div>
-    <div class="asset" onclick="selectAsset('URALS')">URALS</div>
-
-    <h3>STOCKS</h3>
-    <div class="asset" onclick="selectAsset('AAPL')">AAPL</div>
-    <div class="asset" onclick="selectAsset('TSLA')">TSLA</div>
-    <div class="asset" onclick="selectAsset('NVDA')">NVDA</div>
-    <div class="asset" onclick="selectAsset('MSFT')">MSFT</div>
-    <div class="asset" onclick="selectAsset('AMZN')">AMZN</div>
-    <div class="asset" onclick="selectAsset('META')">META</div>
-    <div class="asset" onclick="selectAsset('GOOGL')">GOOGL</div>
-    <div class="asset" onclick="selectAsset('NFLX')">NFLX</div>
-    <div class="asset" onclick="selectAsset('AMD')">AMD</div>
-    <div class="asset" onclick="selectAsset('JPM')">JPM</div>
-
-  </div>
-
-  <!-- CENTER -->
-  <div class="main">
-    <div id="chart" class="chart"></div>
-
-    <div class="bottom">
-      <div>Balance: <span id="balance">10000</span>$</div>
-      <div>Equity: <span id="equity">10000</span>$</div>
-      <div>Margin: <span id="margin">0</span>$</div>
-      <div>Free: <span id="free">10000</span>$</div>
-      <div>PnL: <span id="pnl">0</span>$</div>
-      <div>Margin Level: <span id="ml">0</span>%</div>
-    </div>
-  </div>
-
-  <!-- RIGHT PANEL -->
-  <div class="trade-panel">
-
-    <h3>TRADE</h3>
-
-    <label>Order Type</label>
     <select id="orderType">
       <option value="market">Market</option>
-      <option value="limit">Limit</option>
     </select>
 
-    <label>Volume ($)</label>
-    <input type="number" id="volume" value="1000">
-
-    <label>Leverage</label>
+    <input id="volume" type="number" value="100" placeholder="Volume ($)">
+    
     <select id="leverage">
-      <option>50</option>
-      <option>100</option>
-      <option>200</option>
-      <option>500</option>
+      <option value="50">1:50</option>
+      <option value="100">1:100</option>
+      <option value="200">1:200</option>
+      <option value="500">1:500</option>
     </select>
 
-    <label>Stop Loss</label>
-    <input type="number" id="sl">
-
-    <label>Take Profit</label>
-    <input type="number" id="tp">
+    <input id="sl" type="number" placeholder="Stop Loss (price)">
+    <input id="tp" type="number" placeholder="Take Profit (price)">
 
     <button class="buy" onclick="openTrade('buy')">BUY</button>
     <button class="sell" onclick="openTrade('sell')">SELL</button>
+
+    <div class="stats">
+      Equity: $<span id="equity">10000</span><br>
+      Margin: $<span id="margin">0</span><br>
+      Free Margin: $<span id="free">10000</span><br>
+      PnL: $<span id="pnl">0</span><br>
+      Margin Level: <span id="ml">0</span>%
+    </div>
 
   </div>
 
@@ -209,27 +125,161 @@ button{
 
 <script>
 
+// ===== BASIC VARIABLES =====
+
 let currentAsset = "BTCUSDT";
 let currentPrice = 0;
 
-function selectAsset(asset){
-  currentAsset = asset;
-  loadChart(asset);
-}
+let balance = 10000;
+let equity = 10000;
+let usedMargin = 0;
+let freeMargin = 10000;
+let marginLevel = 0;
+let totalPnL = 0;
+
+let positions = [];
+let ws;
+
+// ===== LOAD CHART =====
 
 function loadChart(symbol){
-  document.getElementById("chart").innerHTML="";
+  document.getElementById("chart").innerHTML = "";
+
   new TradingView.widget({
-    container_id:"chart",
-    symbol:"BINANCE:"+symbol,
-    interval:"15",
-    theme:"dark",
-    width:"100%",
-    height:"100%"
+    symbol: symbol,
+    interval: "15",
+    container_id: "chart",
+    theme: "dark",
+    style: "1",
+    locale: "en",
+    toolbar_bg: "#111827",
+    enable_publishing: false,
+    hide_top_toolbar: false,
+    width: "100%",
+    height: "100%"
   });
 }
 
 loadChart(currentAsset);
+
+// ===== CHANGE ASSET =====
+
+function changeAsset(){
+  currentAsset = document.getElementById("asset").value;
+  loadChart(currentAsset);
+  connectPrice(currentAsset);
+}
+
+// ===== PRICE CONNECTION =====
+
+function connectPrice(symbol){
+
+  if(ws) ws.close();
+
+  if(symbol.includes("USDT")){
+    ws = new WebSocket("wss://stream.binance.com:9443/ws/"+symbol.toLowerCase()+"@trade");
+
+    ws.onmessage = function(event){
+      const data = JSON.parse(event.data);
+      currentPrice = parseFloat(data.p);
+      updatePositions();
+    }
+  } else {
+    currentPrice = 100;
+    setInterval(()=>{
+      currentPrice += (Math.random()-0.5);
+      updatePositions();
+    },1000);
+  }
+}
+
+connectPrice(currentAsset);
+
+// ===== OPEN TRADE =====
+
+function openTrade(type){
+
+  let volume = parseFloat(document.getElementById("volume").value);
+  let leverage = parseFloat(document.getElementById("leverage").value);
+  let sl = parseFloat(document.getElementById("sl").value) || null;
+  let tp = parseFloat(document.getElementById("tp").value) || null;
+
+  let margin = volume / leverage;
+
+  if(margin > freeMargin){
+    alert("Недостаточно маржи!");
+    return;
+  }
+
+  positions.push({
+    type:type,
+    volume:volume,
+    leverage:leverage,
+    entry:currentPrice,
+    sl:sl,
+    tp:tp,
+    margin:margin,
+    pnl:0
+  });
+
+  usedMargin += margin;
+  freeMargin -= margin;
+
+  updatePositions();
+}
+
+// ===== UPDATE POSITIONS =====
+
+function updatePositions(){
+
+  totalPnL = 0;
+
+  positions.forEach(pos=>{
+
+    if(pos.type==="buy"){
+      pos.pnl = (currentPrice - pos.entry) * (pos.volume/currentPrice);
+    } else {
+      pos.pnl = (pos.entry - currentPrice) * (pos.volume/currentPrice);
+    }
+
+    if(pos.sl && ((pos.type==="buy" && currentPrice<=pos.sl) ||
+       (pos.type==="sell" && currentPrice>=pos.sl))){
+         closePosition(pos);
+    }
+
+    if(pos.tp && ((pos.type==="buy" && currentPrice>=pos.tp) ||
+       (pos.type==="sell" && currentPrice<=pos.tp))){
+         closePosition(pos);
+    }
+
+    totalPnL += pos.pnl;
+  });
+
+  equity = balance + totalPnL;
+  freeMargin = equity - usedMargin;
+  marginLevel = usedMargin>0 ? (equity/usedMargin)*100 : 0;
+
+  updateUI();
+}
+
+// ===== CLOSE =====
+
+function closePosition(pos){
+  balance += pos.pnl;
+  usedMargin -= pos.margin;
+  positions = positions.filter(p=>p!==pos);
+}
+
+// ===== UPDATE UI =====
+
+function updateUI(){
+  document.getElementById("balance").innerText = balance.toFixed(2);
+  document.getElementById("equity").innerText = equity.toFixed(2);
+  document.getElementById("margin").innerText = usedMargin.toFixed(2);
+  document.getElementById("free").innerText = freeMargin.toFixed(2);
+  document.getElementById("pnl").innerText = totalPnL.toFixed(2);
+  document.getElementById("ml").innerText = marginLevel.toFixed(2);
+}
 
 </script>
 
