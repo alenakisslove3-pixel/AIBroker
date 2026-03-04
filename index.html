@@ -1,202 +1,339 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Broker</title>
-
-<!-- TradingView -->
+<title>AI Broker PRO</title>
 <script src="https://s3.tradingview.com/tv.js"></script>
-
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{
   margin:0;
-  background:#0e111a;
-  color:white;
-  font-family:Arial, sans-serif;
-}
-
-/* AUTH SCREEN */
-#authScreen{
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#0e111a;
-}
-
-.auth-box{
-  background:#161b22;
-  padding:30px;
-  width:320px;
-  border-radius:10px;
-  box-shadow:0 0 20px rgba(0,0,0,0.5);
-}
-
-.auth-box h2{
-  margin-top:0;
-  text-align:center;
-}
-
-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:12px;
-  border-radius:6px;
-  border:1px solid #333;
-  background:#1f2937;
-  color:white;
-  font-size:14px;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:14px;
-  margin-bottom:10px;
-}
-
-.login{
-  background:#2962ff;
+  font-family:Arial;
+  background:#0b1220;
   color:white;
 }
 
-.register{
-  background:#10b981;
-  color:black;
-}
-
-.logout{
-  background:#ff4d4d;
-  color:white;
-  width:150px;
-  margin:10px;
-}
-
-/* APP */
-#app{
-  display:none;
-}
-
-.header{
+header{
+  background:#0f172a;
+  padding:15px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:10px 20px;
-  background:#161b22;
+  font-size:18px;
+}
+
+.container{
+  display:flex;
+  height:calc(100vh - 60px);
+}
+
+#chart{
+  flex:3;
+}
+
+.panel{
+  flex:1;
+  background:#111827;
+  padding:15px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  overflow:auto;
+}
+
+input,select,button{
+  padding:7px;
+  border:none;
+  border-radius:4px;
+}
+
+button{
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.buy{background:#16a34a;color:white;}
+.sell{background:#dc2626;color:white;}
+.closebtn{background:#374151;color:white;font-size:12px;padding:3px 6px;}
+
+table{
+  width:100%;
+  font-size:12px;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:4px;
+  border-bottom:1px solid #1f2937;
+  text-align:center;
+}
+
+.stats{
+  background:#0b1220;
+  padding:10px;
+  margin-top:10px;
+  font-size:13px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- AUTH -->
-<div id="authScreen">
-  <div class="auth-box">
-    <h2>AI Broker Login</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button class="login" onclick="login()">Login</button>
-    <button class="register" onclick="register()">Register</button>
-  </div>
+<header>
+  <div>AI Broker PRO DEMO</div>
+  <div>Balance: $<span id="balance">10000</span></div>
+</header>
+
+<div class="container">
+
+<div id="chart"></div>
+
+<div class="panel">
+
+<select id="asset" onchange="changeAsset()">
+<option>BTCUSDT</option>
+<option>ETHUSDT</option>
+<option>BNBUSDT</option>
+<option>XRPUSDT</option>
+<option>SOLUSDT</option>
+<option>ADAUSDT</option>
+<option>DOGEUSDT</option>
+<option>DOTUSDT</option>
+<option>MATICUSDT</option>
+<option>AVAXUSDT</option>
+<option>EURUSD</option>
+<option>GBPUSD</option>
+<option>USDJPY</option>
+<option>AUDUSD</option>
+<option>USDCAD</option>
+<option>XAUUSD</option>
+<option>XAGUSD</option>
+<option>USOIL</option>
+<option>UKOIL</option>
+<option>AAPL</option>
+<option>TSLA</option>
+<option>AMZN</option>
+<option>MSFT</option>
+<option>NVDA</option>
+<option>META</option>
+<option>GOOGL</option>
+<option>NFLX</option>
+<option>INTC</option>
+<option>AMD</option>
+<option>BABA</option>
+</select>
+
+<select id="orderType">
+<option value="market">Market</option>
+</select>
+
+<input id="volume" type="number" value="100" placeholder="Volume $">
+
+<select id="leverage">
+<option value="50">1:50</option>
+<option value="100">1:100</option>
+<option value="200">1:200</option>
+<option value="500">1:500</option>
+</select>
+
+<input id="sl" type="number" placeholder="Stop Loss price">
+<input id="tp" type="number" placeholder="Take Profit price">
+
+<button class="buy" onclick="openTrade('buy')">BUY</button>
+<button class="sell" onclick="openTrade('sell')">SELL</button>
+
+<h3>Open Positions</h3>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Type</th>
+<th>Volume</th>
+<th>Entry</th>
+<th>PnL</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="positionsTable"></tbody>
+</table>
+
+<div class="stats">
+Equity: $<span id="equity">10000</span><br>
+Margin: $<span id="margin">0</span><br>
+Free Margin: $<span id="free">10000</span><br>
+Floating PnL: $<span id="pnl">0</span><br>
+Margin Level: <span id="ml">0</span>%<br>
 </div>
 
-<!-- APP -->
-<div id="app">
-  <div class="header">
-    <h3>AI Broker</h3>
-    <button class="logout" onclick="logout()">Logout</button>
-  </div>
-  <div id="chart" style="height:600px;"></div>
+</div>
 </div>
 
 <script>
-// ===== SUPABASE CONNECT =====
-const supabaseClient = supabase.createClient(
-  "https://rixkswgfzzheeepzzell.supabase.co",
-  "sb_publishable_Vp9Eq6BmzEMg60wEjFbUJA_lwNtAu74"
-);
 
-// ===== REGISTER =====
-async function register(){
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+let currentAsset="BTCUSDT";
+let currentPrice=0;
+let ws;
 
-  if(!email || !password){
-    alert("Введите email и пароль");
-    return;
-  }
+let balance=10000;
+let equity=10000;
+let usedMargin=0;
+let freeMargin=10000;
+let marginLevel=0;
+let totalPnL=0;
+let stopOutPercent=50;
 
-  const { error } = await supabaseClient.auth.signUp({
-    email: email,
-    password: password
-  });
+let positions=[];
 
-  if(error){
-    alert(error.message);
-  } else {
-    alert("Регистрация успешна! Проверь почту.");
-  }
-}
-
-// ===== LOGIN =====
-async function login(){
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  if(!email || !password){
-    alert("Введите email и пароль");
-    return;
-  }
-
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if(error){
-    alert(error.message);
-  } else {
-    showApp();
-  }
-}
-
-// ===== LOGOUT =====
-async function logout(){
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
-
-// ===== SHOW APP =====
-function showApp(){
-  document.getElementById("authScreen").style.display = "none";
-  document.getElementById("app").style.display = "block";
-
-  new TradingView.widget({
-    width:"100%",
-    height:600,
-    symbol:"BINANCE:BTCUSDT",
-    interval:"15",
-    theme:"dark",
-    style:"1",
-    locale:"ru",
-    container_id:"chart"
-  });
-}
-
-// ===== CHECK SESSION ON LOAD =====
-supabaseClient.auth.getSession().then(({data})=>{
-  if(data.session){
-    showApp();
-  }
+function loadChart(symbol){
+document.getElementById("chart").innerHTML="";
+new TradingView.widget({
+symbol:symbol,
+interval:"15",
+container_id:"chart",
+theme:"dark",
+style:"1",
+locale:"en",
+toolbar_bg:"#111827",
+width:"100%",
+height:"100%"
 });
+}
+
+loadChart(currentAsset);
+
+function changeAsset(){
+currentAsset=document.getElementById("asset").value;
+loadChart(currentAsset);
+connectPrice(currentAsset);
+}
+
+function connectPrice(symbol){
+
+if(ws) ws.close();
+
+if(symbol.includes("USDT")){
+ws=new WebSocket("wss://stream.binance.com:9443/ws/"+symbol.toLowerCase()+"@trade");
+ws.onmessage=function(e){
+let data=JSON.parse(e.data);
+currentPrice=parseFloat(data.p);
+updatePositions();
+};
+}else{
+currentPrice=100;
+setInterval(()=>{
+currentPrice+= (Math.random()-0.5);
+updatePositions();
+},1000);
+}
+}
+
+connectPrice(currentAsset);
+
+function openTrade(type){
+
+let volume=parseFloat(document.getElementById("volume").value);
+let leverage=parseFloat(document.getElementById("leverage").value);
+let sl=parseFloat(document.getElementById("sl").value)||null;
+let tp=parseFloat(document.getElementById("tp").value)||null;
+
+let margin=volume/leverage;
+
+if(margin>freeMargin){
+alert("Not enough margin");
+return;
+}
+
+positions.push({
+id:Date.now(),
+asset:currentAsset,
+type:type,
+volume:volume,
+leverage:leverage,
+entry:currentPrice,
+sl:sl,
+tp:tp,
+margin:margin,
+pnl:0
+});
+
+usedMargin+=margin;
+updatePositions();
+}
+
+function closePosition(id){
+let pos=positions.find(p=>p.id===id);
+balance+=pos.pnl;
+usedMargin-=pos.margin;
+positions=positions.filter(p=>p.id!==id);
+updatePositions();
+}
+
+function updatePositions(){
+
+totalPnL=0;
+
+positions.forEach(pos=>{
+
+if(pos.type==="buy"){
+pos.pnl=(currentPrice-pos.entry)*(pos.volume/currentPrice);
+}else{
+pos.pnl=(pos.entry-currentPrice)*(pos.volume/currentPrice);
+}
+
+if(pos.sl && ((pos.type==="buy" && currentPrice<=pos.sl) ||
+(pos.type==="sell" && currentPrice>=pos.sl))){
+closePosition(pos.id);
+}
+
+if(pos.tp && ((pos.type==="buy" && currentPrice>=pos.tp) ||
+(pos.type==="sell" && currentPrice<=pos.tp))){
+closePosition(pos.id);
+}
+
+totalPnL+=pos.pnl;
+});
+
+equity=balance+totalPnL;
+freeMargin=equity-usedMargin;
+marginLevel=usedMargin>0?(equity/usedMargin)*100:0;
+
+if(marginLevel<stopOutPercent && positions.length>0){
+positions.forEach(p=>closePosition(p.id));
+alert("STOP OUT");
+}
+
+updateUI();
+renderPositions();
+}
+
+function renderPositions(){
+let table=document.getElementById("positionsTable");
+table.innerHTML="";
+
+positions.forEach(pos=>{
+let row=`
+<tr>
+<td>${pos.asset}</td>
+<td>${pos.type}</td>
+<td>${pos.volume}</td>
+<td>${pos.entry.toFixed(2)}</td>
+<td style="color:${pos.pnl>=0?'#16a34a':'#dc2626'}">${pos.pnl.toFixed(2)}</td>
+<td><button class="closebtn" onclick="closePosition(${pos.id})">X</button></td>
+</tr>
+`;
+table.innerHTML+=row;
+});
+}
+
+function updateUI(){
+document.getElementById("balance").innerText=balance.toFixed(2);
+document.getElementById("equity").innerText=equity.toFixed(2);
+document.getElementById("margin").innerText=usedMargin.toFixed(2);
+document.getElementById("free").innerText=freeMargin.toFixed(2);
+document.getElementById("pnl").innerText=totalPnL.toFixed(2);
+document.getElementById("ml").innerText=marginLevel.toFixed(2);
+}
+
 </script>
 
 </body>
